@@ -4,22 +4,23 @@ Brazilian Bank Sync for Actual with Pluggy using Python
 
 # Como configurar conexão com Meu Pluggy:
 
-1. criar uma conta em pluggy.ai
-    ir em Aplicações > Nova
+1. Criar uma conta em pluggy.ai
+2. Fazer login em meu.pluggy.ai e conectar contas bancárias
+3. Em dashboard.pluggy.ai > ir em Aplicações > Nova
+4. Ir para demo.pluggy.ai
 
-2. fazer login em meu.pluggy.ai e conectar contas bancárias
-
-3. ir para demo.pluggy.ai
-    conectar conta > MeuPluggy 
-    repetir para quantas contas existir
+    conectar conta > MeuPluggy (uma instância para cada conta)
     
-4. configurar credenciais no Actual:
-    criar uma conta chamada "Pluggy" (pode ser off-budget)
-    inserir na anotação da conta:
-        #clientID: "xxxxx"
-        #clientSecret: "xxxxx"
-        disponível em dashboard.pluggy.ai > Aplicações > Credenciais
-    inserir ID em casa conta que deseja sincronizar:
-        #pluggy "TYPE, itemID"
-            TYPE = BANK / CREDIT
-            itemID -> disponível em meu.pluggy.ai > ... > copiar itemID
+5. Configurar credenciais no Actual:
+
+    criar uma conta chamada "Pluggy" (pode ser off-budget) e inserir na anotação da conta:
+
+       #clientID: "xxxxx"
+       #clientSecret: "xxxxx"
+       - informação encontrada em dashboard.pluggy.ai > Aplicações > Credenciais
+
+   inserir o ID nas anotações de cada conta que a ser sincronizada:
+
+       #pluggy "TYPE, itemID"
+       - TYPE: BANK / CREDIT
+       - itemID: encontrado em meu.pluggy.ai > ... > copiar itemID
