@@ -6,6 +6,12 @@ import decimal
 import requests
 import json
 
+def backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL):
+    with Actual(base_url=URL_ACTUAL, password=PASSWORD_ACTUAL, file=FILE_ACTUAL) as actual:
+        current_date = datetime.now().strftime("%Y%m%d")
+        actual.export_data(f"./Backup/{FILE_ACTUAL}-{current_date}.zip")
+        print("Data backed up.\n")
+
 def getPluggy_secrets(string):
     clientID = None
     clientSecret = None
@@ -173,8 +179,8 @@ def getPluggy_acc_config(account_notes):
                 print(f"Pluggy link configured!")
                 accNotes = line.split('"')[1]
                 # accNotes = line.strip("#pluggy").strip().split(",")
-                itemType = accNotes.split(",")[0]
-                itemID = accNotes.split(",")[1]
+                itemType = accNotes.split(",")[0].strip()
+                itemID = accNotes.split(",")[1].strip()
     except:
         pluggyLink += 0
     return pluggyLink, itemType, itemID
@@ -187,18 +193,22 @@ def pluggy_range_dates(session, account, range_days):
     """
     days_delta = timedelta(days=range_days)
     today = datetime.today()
-    start_tdate = today - timedelta(days=45)
+    start_tdate = today - timedelta(days=30)
     transactions = get_transactions(session, start_tdate, account=account)
-    bigger_date = int((today - timedelta(days=360)).strftime('%Y%m%d'))
+    bigger_date = int((today - timedelta(days=10)).strftime('%Y%m%d'))
     for t in transactions:
         date = t.date
         bigger_date = date if bigger_date < date else bigger_date
     last_tdate = datetime.strptime(str(bigger_date), "%Y%m%d")
-    if today - last_tdate < days_delta: start_date = today - days_delta
-    else: start_date = last_tdate
-    # print(bigger_date)
+    if today - last_tdate < days_delta: 
+        start_date = today - days_delta
+        end_date = today
+    else: 
+        start_date = last_tdate
+        end_date = last_tdate + timedelta(days=10)
+
     start_date = start_date.strftime('%Y-%m-%d')
-    end_date = today.strftime('%Y-%m-%d')
+    end_date = end_date.strftime('%Y-%m-%d')
     print(f"Fetching transactions from {start_date} to {end_date}.")
     return start_date, end_date
 

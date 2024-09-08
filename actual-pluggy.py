@@ -1,4 +1,4 @@
-from functions import pluggy_sync
+from functions import pluggy_sync, backup_actual
 import config
 
 try: 
@@ -18,4 +18,5 @@ try:
 except AttributeError:
     print("Erro na definição das configuraçõs do Actual")
 
+backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
 pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
