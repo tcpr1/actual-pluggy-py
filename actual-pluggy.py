@@ -16,7 +16,7 @@ try:
     except AttributeError:
         pass
 except AttributeError:
-    print("Erro na definição das configuraçõs do Actual")
+    print("Erro na definição das configurações do Actual")
 
 backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
 pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)

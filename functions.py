@@ -1,6 +1,6 @@
 # Functions
 from actual import Actual
-from actual.queries import get_account, get_accounts, get_transactions, reconcile_transaction
+from actual.queries import get_account, get_accounts, get_transactions, reconcile_transaction, get_ruleset
 from datetime import datetime, timedelta
 import decimal
 import requests
@@ -68,12 +68,11 @@ def getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date):
         jAccounts = json.loads(response.text)
         accountID = jAccounts["results"][0]["id"]
 
+        # start_date = "2024-08-15"
+        # end_date = "2024-08-17"
+
         # List Transactions
         url = "https://api.pluggy.ai/transactions?accountId=" + accountID + "&from=" + start_date + "&to=" + end_date
-        # headers = {
-        #     "accept": "application/json",
-        #     "X-API-KEY": apiKey
-        # }
         response = requests.get(url, headers=headers)
         jTransactions = json.loads(response.text)
         print("SUCCESS: Pluggy connected!")
@@ -133,7 +132,8 @@ def getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date):
         csv_data.append(new_data)
     return csv_data, True
 
-def pluggy_to_actual(csv_data, actual_session, account):
+def data_to_actual(csv_data, actual_session, account):
+    ruleset = get_ruleset(actual_session)
     added_transactions = []
     for row in csv_data:
         # here, we define the basic information from the file
@@ -159,7 +159,10 @@ def pluggy_to_actual(csv_data, actual_session, account):
             imported_payee=payee,
             already_matched=added_transactions,
         )
+        actual_session.flush()  # flush to load the ids and relationships
+        ruleset.run(t)  # run the rule here
         added_transactions.append(t)
+
         if t.changed():
             print(f"Added or modified {t}")
 
@@ -212,7 +215,7 @@ def pluggy_range_dates(session, account, range_days):
     print(f"Fetching transactions from {start_date} to {end_date}.")
     return start_date, end_date
 
-def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL):
+def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date):
     """
     Connects to Pluggy API and extract bank transactions to sync with Actual
     Requires free version of Pluggy (demo.pluggy.ai) and actualpy API
@@ -245,11 +248,11 @@ def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL):
                         errFlag += 1
 
                     elif pluggyLink == 1:
-                        start_date, end_date = pluggy_range_dates(actual.session, account, range_days=5)
+                        # start_date, end_date = pluggy_range_dates(actual.session, account, range_days=5)
                         csv_data, pluggy_status = getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date)
 
                         if pluggy_status: # if pluggy connection failed, do nothing
                             print(f"Starting Actual reconciliation for {accName}")
-                            pluggy_to_actual(csv_data, actual.session, account)
+                            data_to_actual(csv_data, actual.session, account)
 
-                    actual.commit() # push the changes to the server
+            actual.commit() # push the changes to the server
