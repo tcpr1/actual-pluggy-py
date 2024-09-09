@@ -6,31 +6,32 @@ from datetime import datetime, timedelta
 actual_users = {"": "", "Thiago": "5006", "Milena": "5008", "Família": "5007", "Fabio": "5011","Teste": "5077"}
 url_base = "http://elite.mt:"
 
+st.header("Actual-Pluggy-Py")
+st.write("Brazilian bank sync for Actual powered by Pluggy")
+st.divider()
+
 # Criando as colunas
 col1, col2 = st.columns([2, 1])
 
 # Coluna da esquerda
 with col1:
-    # Campo para o usuário selecionar a URL atual
-    selected_user = st.selectbox("Selecione o usuário Actual", list(actual_users.keys()))
+    # Campo para selecionar o usuário (instância do Actual)
+    selected_user = st.selectbox("Selecione o usuário:", list(actual_users.keys()))
     # Obter o valor selecionado a partir do dicionário e concatenar com a url base
     URL_ACTUAL = url_base + actual_users[selected_user]
     # Campo para o usuário preencher a senha
-    PASSWORD_ACTUAL = st.text_input("Digite a senha Actual", type="password")
-
-    # Campo para o usuário selecionar um arquivo
-    FILE_ACTUAL = st.text_input("Digite o nome do arquivo budget")
+    PASSWORD_ACTUAL = st.text_input("Senha do Actual:", type="password")
+    # Campo para o usuário informar o nome de um arquivo
+    FILE_ACTUAL = st.text_input("Nome do budget (file):")
 
 # Coluna da direita
 with col2:
-    # Calculando as datas padrão
+    # Definindo datas default
     end_date = datetime.today().date()
     start_date = end_date - timedelta(days=7)
 
-    # Campo para o usuário preencher a data de início
+    # Campos de data
     start_date = st.date_input("Data de Início", start_date, format="DD/MM/YYYY")
-
-    # Campo para o usuário preencher a data de fim
     end_date = st.date_input("Data de Fim", end_date, format="DD/MM/YYYY")
 
 # Exibição dos valores
@@ -55,7 +56,8 @@ def st_capture(output_func):
         stdout.write = new_write
         yield
 
-# Criando as colunas
+st.divider()
+
 col1, col2 = st.columns([2, 1])
 with col2:
     output0 = st.empty()
@@ -82,6 +84,7 @@ with col1:
         output2 = st.empty()
         with st_capture(output2.code):    
             delta = end_date - start_date
+            # Limitando as consultas ao pluggy para 10 dias por vez
             if delta.days <= 10:
                 start_date = start_date.strftime('%Y-%m-%d')
                 end_date = end_date.strftime('%Y-%m-%d')
