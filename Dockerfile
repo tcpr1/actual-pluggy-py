@@ -1,6 +1,6 @@
 # app/Dockerfile
 
-FROM python:3.11-slim
+FROM python:3.11
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # RUN git clone https://github.com/tcpr1/actual-pluggy-py .
-RUN . .
+COPY . .
 
 RUN pip3 install -r requirements.txt
 
