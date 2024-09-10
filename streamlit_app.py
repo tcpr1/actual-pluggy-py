@@ -3,6 +3,7 @@ from functions import pluggy_sync, backup_actual
 from datetime import datetime, timedelta
 
 # Lista de instâncias Actual: Nome:Porta
+# TODO: passar essas duas variáveis para o arquivo config.ini
 actual_users = {"": "", "Thiago": "5006", "Milena": "5008", "Família": "5007", "Fabio": "5011","Teste": "5077"}
 url_base = "http://elite.mt:"
 
@@ -35,9 +36,9 @@ with col2:
     end_date = st.date_input("Data de Fim", end_date, format="DD/MM/YYYY")
 
 # Exibição dos valores
-st.write("URL Actual:", URL_ACTUAL)
+# st.write("URL Actual:", URL_ACTUAL)
 # st.write("Senha Actual:", PASSWORD_ACTUAL)
-st.write("Arquivo Budget Actual:", FILE_ACTUAL)
+# st.write("Arquivo Budget Actual:", FILE_ACTUAL)
 
 # Bloco para capturar e poder exibir os print() do código (output2)
 from contextlib import contextmanager, redirect_stdout
