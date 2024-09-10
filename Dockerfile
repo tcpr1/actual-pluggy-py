@@ -1,7 +1,5 @@
 # app/Dockerfile
-
 FROM python:3.11
-
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
@@ -13,8 +11,15 @@ RUN apt-get update && apt-get install -y \
 
 # RUN git clone https://github.com/tcpr1/actual-pluggy-py .
 COPY . .
-
 RUN pip3 install -r requirements.txt
+
+ARG USERNAME=actual
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+RUN mkdir /app/data/Backup && chown -R ${USERNAME}:${USERNAME} /app/data/Backup
+WORKDIR /app
 
 EXPOSE 8501
 
