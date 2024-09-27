@@ -9,7 +9,7 @@ import json
 def backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL):
     with Actual(base_url=URL_ACTUAL, password=PASSWORD_ACTUAL, file=FILE_ACTUAL) as actual:
         current_date = datetime.now().strftime("%Y%m%d")
-        actual.export_data(f"./Backup/{FILE_ACTUAL}-{current_date}.zip")
+        actual.export_data(f"./data/Backup/{FILE_ACTUAL}-{current_date}.zip")
         print("Data backed up.\n")
 
 def getPluggy_secrets(string):

@@ -68,7 +68,7 @@ with col1:
         backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
         output0.write("Backup concluído.")
         
-        with open(f"./Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
+        with open(f"./data/Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
             btn = st.download_button(
                 label="Download backup",
                 data=file,
