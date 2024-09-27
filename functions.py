@@ -160,9 +160,10 @@ def data_to_actual(csv_data, actual_session, account):
             already_matched=added_transactions,
         )
         actual_session.flush()  # flush to load the ids and relationships
+        print(t)
         ruleset.run(t)  # run the rule here
         added_transactions.append(t)
-
+        
         if t.changed():
             print(f"Added or modified {t}")
 

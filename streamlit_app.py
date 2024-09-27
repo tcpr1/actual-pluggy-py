@@ -1,6 +1,7 @@
 import streamlit as st
 from functions import pluggy_sync, backup_actual
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # Lista de instâncias Actual: Nome:Porta
 # TODO: passar essas duas variáveis para o arquivo config.ini
@@ -28,17 +29,13 @@ with col1:
 # Coluna da direita
 with col2:
     # Definindo datas default
-    end_date = datetime.today().date()
-    start_date = end_date - timedelta(days=7)
+    end_date_default = datetime.today().replace(tzinfo=ZoneInfo('America/Sao_Paulo')).date()
+    current_date = end_date_default.strftime("%Y%m%d")
+    start_date_default = end_date_default - timedelta(days=7)
 
     # Campos de data
-    start_date = st.date_input("Data de Início", start_date, format="DD/MM/YYYY")
-    end_date = st.date_input("Data de Fim", end_date, format="DD/MM/YYYY")
-
-# Exibição dos valores
-# st.write("URL Actual:", URL_ACTUAL)
-# st.write("Senha Actual:", PASSWORD_ACTUAL)
-# st.write("Arquivo Budget Actual:", FILE_ACTUAL)
+    start_date = st.date_input("Data de Início", start_date_default, format="DD/MM/YYYY")
+    end_date = st.date_input("Data de Fim", end_date_default, format="DD/MM/YYYY")
 
 # Bloco para capturar e poder exibir os print() do código (output2)
 from contextlib import contextmanager, redirect_stdout
@@ -71,13 +68,13 @@ with col1:
         backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
         output0.write("Backup concluído.")
         
-        with open(f"./Backup/{FILE_ACTUAL}-{end_date.strftime('%Y%m%d')}.zip", "rb") as file:
+        with open(f"./Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
             btn = st.download_button(
                 label="Download backup",
                 data=file,
-                file_name=(f"{selected_user}-{FILE_ACTUAL}-{end_date.strftime('%Y%m%d')}.zip"),
+                file_name=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
                 mime="file",
-                help=(f"{selected_user}-{FILE_ACTUAL}-{end_date.strftime('%Y%m%d')}.zip"),
+                help=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
             )
         
         output1.write("Iniciando sincronização...")
