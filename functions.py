@@ -43,28 +43,34 @@ def getPluggy_secrets(string):
 
     return apiKey
 
-def getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date):
+def getPluggy_transactions(apiKey, itemType, itemID, cardNumber, start_date, end_date):
     """ Connect to Pluggy API with Account's correspondent itemID and get transactions.
     :account_name: Actual's Account name to integrate transactions with. Use for exporting .csv (not implemented) 
     :param itemType: itemType from Pluggy Account (BANK, CREDIT)
     :param itemID: itemID from Pluggy connection (Demo Pluggy Connect)
+    :param cardNumber: last 4 digits from credit card
     :param start_date: first date to search for transactions
     :param end_date: last date to search for transactions
     """
     # Pluggy API
+    accountID = ""
     try: 
         headers = {
             "accept": "application/json",
             "X-API-KEY": apiKey
         }
         # List Accounts
-        url = "https://api.pluggy.ai/accounts?itemId=" + itemID + "&type=" + itemType # BANK/CREDIT
+        url = "https://api.pluggy.ai/accounts?itemId=" + itemID + "&type=" + itemType 
         response = requests.get(url, headers=headers)
         jAccounts = json.loads(response.text)
-        accountID = jAccounts["results"][0]["id"]
-
-        # start_date = "2024-08-15"
-        # end_date = "2024-08-17"
+        
+        if itemType == "BANK":
+            accountID = jAccounts["results"][0]["id"]
+        elif itemType == "CREDIT":
+            # Se a conta possuir diversos cartões, procura até achar o correspondente
+            for i in range(jAccounts["total"]):
+                if jAccounts["results"][i]["number"] == cardNumber:
+                    accountID = jAccounts["results"][i]["id"]
 
         # List Transactions
         url = "https://api.pluggy.ai/transactions?accountId=" + accountID + "&from=" + start_date + "&to=" + end_date
@@ -80,51 +86,109 @@ def getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date):
 
     # | Date | Payee | Notes | Category | Amount | Cleared | Imported_ID
     # [["Date","Payee","Notes","Category","Payment/Deposit","Cleared", "imported_ID"]]
-    csv_data = [] 
 
-    for i in range(nTransactions):
-        date = jTransactions['results'][i]['date'].split('T')[0]
-        
-        # Payment Method
-        try:
-            pay_method = jTransactions['results'][i]["paymentData"]["paymentMethod"]
-            if pay_method == None: pay_method = "Unknown"
-            else: pay_method = str(pay_method)
-        except:
-            pay_method = "No_method"
+    def BANKtransactions (jTransactions):
+        csv_data = []
+        nTransactions = jTransactions["total"]
+        for i in range(nTransactions):
+            date = jTransactions['results'][i]['date'].split('T')[0]
+            
+            # Payment Method
+            try:
+                pay_method = jTransactions['results'][i]["paymentData"]["paymentMethod"]
+                if pay_method == None: pay_method = "Unknown"
+                else: pay_method = str(pay_method)
+            except:
+                pay_method = "No_method"
 
-        # Payee or Notes
-        tType = jTransactions["results"][i]["type"] # Transaction Type: CREDIT or DEBIT
-        description = jTransactions['results'][i]["description"]
-        payer, receiver = "", ""
-        if tType == "CREDIT": # Dinheiro recebido
-            try:
-                pay_docnumval = jTransactions['results'][i]["paymentData"]["payer"]["documentNumber"]["value"].replace("-", "").replace(".", "")
-                pay_doctype = jTransactions['results'][i]["paymentData"]["payer"]["documentNumber"]["type"]
-                pay_bank = jTransactions["results"][i]["paymentData"]["payer"]["routingNumber"] # Return bank code
-                payer = " from " + pay_doctype + " " + pay_docnumval + " - BANK: " + pay_bank
-            except:
-                payer = ""
-        elif tType == "DEBIT": # Dinheiro enviado
-            try:
-                merchant = jTransactions['results'][i]['merchant']['businessName'] # PJ
-                receiver = " to " + merchant
-            except:
+            # Payee or Notes
+            tType = jTransactions["results"][i]["type"] # Transaction Type: CREDIT or DEBIT
+            description = jTransactions['results'][i]["description"]
+            payer, receiver = "", ""
+            if tType == "CREDIT": # Dinheiro recebido
                 try:
-                    rec_docnumval = jTransactions['results'][i]["paymentData"]["receiver"]["documentNumber"]["value"].replace("-", "").replace(".", "") # PF
-                    rec_doctype = jTransactions['results'][i]["paymentData"]["receiver"]["documentNumber"]["type"]
-                    rec_bank = jTransactions["results"][i]["paymentData"]["receiver"]["routingNumber"]  # Return bank code
-                    receiver = " to " + rec_doctype + " " + rec_docnumval + " - BANK: " + rec_bank
+                    pay_docnumval = jTransactions['results'][i]["paymentData"]["payer"]["documentNumber"]["value"].replace("-", "").replace(".", "")
+                    pay_doctype = jTransactions['results'][i]["paymentData"]["payer"]["documentNumber"]["type"]
+                    pay_bank = jTransactions["results"][i]["paymentData"]["payer"]["routingNumber"] # Return bank code
+                    payer = " from " + pay_doctype + " " + pay_docnumval + " - BANK: " + pay_bank
                 except:
-                    receiver = ""
-        payee = pay_method + payer + receiver #" "
-        notes = description #+ " | " + pay_method + payer + receiver
-        category = "" # jtransactions['results'][i]["category"]
-        amount = str(jTransactions['results'][i]["amount"])
-        cleared = ""
-        imported_ID = str(jTransactions['results'][i]["id"])
-        new_data = [date, payee, notes, category, amount, cleared, imported_ID]
-        csv_data.append(new_data)
+                    payer = ""
+            elif tType == "DEBIT": # Dinheiro enviado
+                try:
+                    merchant = jTransactions['results'][i]['merchant']['businessName'] # PJ
+                    receiver = " to " + merchant
+                except:
+                    try:
+                        rec_docnumval = jTransactions['results'][i]["paymentData"]["receiver"]["documentNumber"]["value"].replace("-", "").replace(".", "") # PF
+                        rec_doctype = jTransactions['results'][i]["paymentData"]["receiver"]["documentNumber"]["type"]
+                        rec_bank = jTransactions["results"][i]["paymentData"]["receiver"]["routingNumber"]  # Return bank code
+                        receiver = " to " + rec_doctype + " " + rec_docnumval + " - BANK: " + rec_bank
+                    except:
+                        receiver = ""
+            payee = pay_method + payer + receiver #" "
+            notes = description #+ " | " + pay_method + payer + receiver
+            category = "" # jtransactions['results'][i]["category"]
+            amount = str(jTransactions['results'][i]["amount"])
+            cleared = ""
+            imported_ID = str(jTransactions['results'][i]["id"])
+            new_data = [date, payee, notes, category, amount, cleared, imported_ID]
+            csv_data.append(new_data)
+        return csv_data
+    
+    def CREDITtransactions (jTransactions):
+        csv_data = []
+        nTransactions = jTransactions["total"]
+        for i in range(nTransactions):
+            date = jTransactions['results'][i]['date'].split('T')[0]
+            category_raw = jTransactions['results'][i]["category"]
+            # Description strip
+            description = jTransactions['results'][i]["description"]
+            try:
+                description_payee = description.split(" PARC ")[0].strip()
+            except:
+                description_payee = description.strip()
+
+            # Verify installments (Parcelamento)
+            try:
+                totalPARC = jTransactions['results'][i]['creditCardMetadata']['totalInstallments']
+                PARCnumber = jTransactions['results'][i]['creditCardMetadata']['installmentNumber']
+            except:
+                totalPARC = 1
+                PARCnumber = 1
+            
+            # Define amount como valor da parcela * total de parcelas
+            # O amount do json se refere ao valor da parcela
+            amount_raw = abs(jTransactions['results'][i]["amount"])
+            if PARCnumber == 1:
+                amount = round(totalPARC * amount_raw, 2)
+            else:
+                amount = 0
+            description_PARC = f" | PARC: {PARCnumber}/{totalPARC} | R$ {amount_raw}"
+
+            # Notes and Amount
+            tType = jTransactions["results"][i]["type"] # Transaction Type: CREDIT or DEBIT
+            if tType == "CREDIT": # Dinheiro recebido
+                amount = amount
+  
+            elif tType == "DEBIT": # Dinheiro enviado
+                amount = -amount
+                # merchant = jTransactions['results'][i]['merchant']['businessName'] # PJ
+ 
+            payee = description_payee
+            notes = description + " | " + category_raw + description_PARC #+ " | " + 
+            category = ""
+            amount = str(amount)
+            cleared = ""
+            imported_ID = str(jTransactions['results'][i]["id"])
+            new_data = [date, payee, notes, category, amount, cleared, imported_ID]
+            csv_data.append(new_data)
+        return csv_data
+    
+    if itemType == "BANK":
+        csv_data = BANKtransactions(jTransactions)
+    elif itemType == "CREDIT":
+        csv_data = CREDITtransactions(jTransactions)
+
     return csv_data, True
 
 def data_to_actual(csv_data, actual_session, account):
@@ -169,7 +233,7 @@ def getPluggy_acc_config(account_notes):
     accountType = BANK or CREDIT
     """
     pluggyLink = 0
-    accNotes, itemID, itemType = "", "", ""
+    accNotes, itemID, itemType, cardNumber = "", "", "", ""
     try:
         accNotes = account_notes.split("\n")
         for line in accNotes:
@@ -180,9 +244,11 @@ def getPluggy_acc_config(account_notes):
                 # accNotes = line.strip("#pluggy").strip().split(",")
                 itemType = accNotes.split(",")[0].strip()
                 itemID = accNotes.split(",")[1].strip()
+                if itemType == "CREDIT":
+                    cardNumber = accNotes.split(",")[2].strip()
     except:
         pluggyLink += 0
-    return pluggyLink, itemType, itemID
+    return pluggyLink, itemType, itemID, cardNumber
 
 def pluggy_range_dates(session, account, range_days):
     """ 
@@ -224,7 +290,7 @@ def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, 
             accName = account.name
             if accName != "Pluggy":
                 print(f"\n{accName}: Verifying link with Pluggy.")
-                pluggyLink, itemType, itemID = getPluggy_acc_config(account.notes)
+                pluggyLink, itemType, itemID, cardNumber = getPluggy_acc_config(account.notes)
 
                 if pluggyLink > 1: 
                     print(f"More than one #pluggy data found for {accName} - Only 1 is expected.")
@@ -235,7 +301,7 @@ def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, 
 
                 elif pluggyLink == 1:
                     # start_date, end_date = pluggy_range_dates(actual.session, account, range_days=5)
-                    csv_data, pluggy_status = getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date)
+                    csv_data, pluggy_status = getPluggy_transactions(apiKey, itemType, itemID, cardNumber, start_date, end_date)
 
                     if pluggy_status: # if pluggy connection failed, do nothing
                         print(f"Starting Actual reconciliation for {accName}")

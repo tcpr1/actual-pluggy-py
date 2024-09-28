@@ -9,7 +9,7 @@ actual_users = {"": "", "Thiago": "5006", "Milena": "5008", "Família": "5007", 
 url_base = "http://elite.mt:"
 
 st.header("Actual-Pluggy-Py")
-st.write("Brazilian bank sync for Actual powered by Pluggy - v27_09_2024-18_31")
+st.write("Brazilian bank sync for Actual powered by Pluggy - v28_09_2024.1")
 st.divider()
 
 # Criando as colunas

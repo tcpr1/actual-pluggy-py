@@ -21,6 +21,7 @@ Brazilian Bank Sync for Actual with Pluggy using Python
 
    inserir o ID nas anotações de cada conta que a ser sincronizada:
 
-       #pluggy "TYPE, itemID"
+       #pluggy "TYPE, itemID, {cardNumber}"
        - TYPE: BANK / CREDIT
        - itemID: encontrado em meu.pluggy.ai > ... > copiar itemID
+       - {cardNumber}: 4 dígitos finais do CC (apenas se TYPE = CREDIT)
