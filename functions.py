@@ -15,7 +15,6 @@ def backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL):
 def getPluggy_secrets(string):
     clientID = None
     clientSecret = None
-    credentials = False
     lines = string.split('\n')
     for line in lines:
         if line.startswith("#clientID"):
@@ -24,27 +23,23 @@ def getPluggy_secrets(string):
             clientSecret = line.split('"')[1]
     if clientID != None and clientSecret != None: 
         print("Credenciais para o Pluggy detectada.")
-        credentials = True
     else: 
         print("Não há credenciais válidas para o Pluggy.")
-        credentials = False
+        raise ValueError("Não há credenciais válidas para o Pluggy.")
 
     # Get Pluggy API Key
-    if credentials:
-        url = "https://api.pluggy.ai/auth"
-        payload = {
-            "clientId": clientID,
-            "clientSecret": clientSecret
-        }
-        headers = {
-            "accept": "application/json",
-            "content-type": "application/json"
-        }
-        response = requests.post(url, json=payload, headers=headers)
-        json_apiKey = json.loads(response.text)
-        apiKey = json_apiKey["apiKey"]
-    else: 
-        apiKey = None
+    url = "https://api.pluggy.ai/auth"
+    payload = {
+        "clientId": clientID,
+        "clientSecret": clientSecret
+    }
+    headers = {
+        "accept": "application/json",
+        "content-type": "application/json"
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    json_apiKey = json.loads(response.text)
+    apiKey = json_apiKey["apiKey"]
 
     return apiKey
 
@@ -216,44 +211,42 @@ def pluggy_range_dates(session, account, range_days):
     print(f"Fetching transactions from {start_date} to {end_date}.")
     return start_date, end_date
 
-def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date):
+def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, apiKey):
     """
     Connects to Pluggy API and extract bank transactions to sync with Actual
-    Requires free version of Pluggy (demo.pluggy.ai) and actualpy API
+    Requires free (personal) version of Pluggy (demo.pluggy.ai) and actualpy API
     """
     with Actual(base_url=URL_ACTUAL, password=PASSWORD_ACTUAL, file=FILE_ACTUAL) as actual:
+        # Busca token para conexão de cada conta
         errFlag = 0
-        try:
-            pluggy = get_account(actual.session, "Pluggy")
-            apiKey = getPluggy_secrets(pluggy.notes)
-            if apiKey == None: 
-                print("erro ao obter apiKey")
-                errFlag += 1
-        except:
-            print("erro na configuração de credenciais")
-            errFlag += 1
+        accounts = get_accounts(actual.session)
+        for account in accounts:
+            accName = account.name
+            if accName != "Pluggy":
+                print(f"\n{accName}: Verifying link with Pluggy.")
+                pluggyLink, itemType, itemID = getPluggy_acc_config(account.notes)
 
-        if errFlag == 0:
-            accounts = get_accounts(actual.session)
-            for account in accounts:
-                accName = account.name
-                if accName != "Pluggy":
-                    print(f"\n{accName}: Verifying link with Pluggy.")
-                    pluggyLink, itemType, itemID = getPluggy_acc_config(account.notes)
+                if pluggyLink > 1: 
+                    print(f"More than one #pluggy data found for {accName} - Only 1 is expected.")
+                    errFlag += 1
+                elif pluggyLink == 0: 
+                    print(f"Account not linked.")
+                    errFlag += 1
 
-                    if pluggyLink > 1: 
-                        print(f"More than one #pluggy data found for {accName} - Only 1 is expected.")
-                        errFlag += 1
-                    elif pluggyLink == 0: 
-                        print(f"Account not linked.")
-                        errFlag += 1
+                elif pluggyLink == 1:
+                    # start_date, end_date = pluggy_range_dates(actual.session, account, range_days=5)
+                    csv_data, pluggy_status = getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date)
 
-                    elif pluggyLink == 1:
-                        # start_date, end_date = pluggy_range_dates(actual.session, account, range_days=5)
-                        csv_data, pluggy_status = getPluggy_transactions(apiKey, itemType, itemID, start_date, end_date)
+                    if pluggy_status: # if pluggy connection failed, do nothing
+                        print(f"Starting Actual reconciliation for {accName}")
+                        data_to_actual(csv_data, actual.session, account)
+        actual.commit() # push the changes to the server
 
-                        if pluggy_status: # if pluggy connection failed, do nothing
-                            print(f"Starting Actual reconciliation for {accName}")
-                            data_to_actual(csv_data, actual.session, account)
-
-            actual.commit() # push the changes to the server
+def get_pluggy_api(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL):
+    # Conectar ao Actual e obtém credenciais Pluggy configuradas
+    # Utiliza credenciais para conectar com API Pluggy
+    # Em caso de falha, soma +1 no errFlag
+    with Actual(base_url=URL_ACTUAL, password=PASSWORD_ACTUAL, file=FILE_ACTUAL) as actual:
+        pluggy = get_account(actual.session, "Pluggy")
+        apiKey = getPluggy_secrets(pluggy.notes)
+    return apiKey

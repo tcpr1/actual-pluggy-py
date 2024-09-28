@@ -1,5 +1,5 @@
 import streamlit as st
-from functions import pluggy_sync, backup_actual
+from functions import pluggy_sync, backup_actual, get_pluggy_api
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -50,7 +50,6 @@ def st_capture(output_func):
             ret = old_write(string)
             output_func(stdout.getvalue())
             return ret
-        
         stdout.write = new_write
         yield
 
@@ -64,33 +63,37 @@ with col2:
 with col1:
     # Botão para executar a função pluggy_sync
     if st.button("**SYNC**"):
-        output0.write("Realizando backup...")
-        backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
-        output0.write("Backup concluído.")
-        
-        with open(f"./data/Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
-            btn = st.download_button(
-                label="Download backup",
-                data=file,
-                file_name=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
-                mime="file",
-                help=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
-            )
-        
-        output1.write("Iniciando sincronização...")
-        
-        output2 = st.empty()
-        with st_capture(output2.code):    
-            delta = end_date - start_date
-            # Limitando as consultas ao pluggy para 10 dias por vez
-            if delta.days <= 10:
-                start_date = start_date.strftime('%Y-%m-%d')
-                end_date = end_date.strftime('%Y-%m-%d')
-                pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date)
-            else:
-                for i in range(0, delta.days + 1, 10):
-                    step_start_date = (start_date + timedelta(days=i)).strftime('%Y-%m-%d')
-                    step_end_date = min(start_date + timedelta(days=i + 9), end_date).strftime('%Y-%m-%d')
-                    print(f"\nExecutando sync entre datas: {step_start_date} e {step_end_date}")
-                    pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, step_start_date, step_end_date)
-            output1.write("Sincronização concluída.")
+        try:
+            # Primeiro busca pluggy API key - em caso de falha, levanta erro
+            apiKey = get_pluggy_api(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
+
+            output0.write("Realizando backup...")
+            backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
+            output0.write("Backup concluído.")
+            with open(f"./data/Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
+                btn = st.download_button(
+                    label="Download backup",
+                    data=file,
+                    file_name=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
+                    mime="file",
+                    help=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
+                )
+            
+            output1.write("Iniciando sincronização...")
+            output2 = st.empty()
+            with st_capture(output2.code):    
+                delta = end_date - start_date
+                # Limitando as consultas ao pluggy para 10 dias por vez
+                if delta.days <= 10:
+                    start_date = start_date.strftime('%Y-%m-%d')
+                    end_date = end_date.strftime('%Y-%m-%d')
+                    pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, apiKey)
+                else:
+                    for i in range(0, delta.days + 1, 10):
+                        step_start_date = (start_date + timedelta(days=i)).strftime('%Y-%m-%d')
+                        step_end_date = min(start_date + timedelta(days=i + 9), end_date).strftime('%Y-%m-%d')
+                        print(f"\nExecutando sync entre datas: {step_start_date} e {step_end_date}")
+                        pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, step_start_date, step_end_date, apiKey)
+                output1.write("Sincronização concluída.")
+        except ValueError:
+            output0.write("Falha: verifique credenciais Pluggy.")
