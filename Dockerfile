@@ -18,7 +18,7 @@ ARG USER_UID=1001
 ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
-RUN mkdir /app/data/Backup && chown -R ${USERNAME}:${USERNAME} /app/data/Backup
+RUN mkdir -p /app/data/Backup && chown -R ${USERNAME}:${USERNAME} /app/data/Backup
 WORKDIR /app
 
 EXPOSE 8501

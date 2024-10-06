@@ -25,3 +25,7 @@ Brazilian Bank Sync for Actual with Pluggy using Python
        - TYPE: BANK / CREDIT
        - itemID: encontrado em meu.pluggy.ai > ... > copiar itemID
        - {cardNumber}: 4 dígitos finais do CC (apenas se TYPE = CREDIT)
+
+# Instalação
+
+Criar e configurar arquivo config.ini (ver config-example.ini)

@@ -2,14 +2,35 @@ import streamlit as st
 from functions import pluggy_sync, backup_actual, get_pluggy_api
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+import configparser
 
-# Lista de instâncias Actual: Nome:Porta
-# TODO: passar essas duas variáveis para o arquivo config.ini
-actual_users = {"": "", "Thiago": "5006", "Milena": "5008", "Família": "5007", "Fabio": "5011","Teste": "5077"}
-url_base = "http://elite.mt:"
+
+def read_users():
+    config = configparser.ConfigParser()
+    config.read('config.ini', encoding='utf-8')
+    users = config.sections()
+    return users
+
+def read_config(user):
+    config = configparser.ConfigParser()
+    config.read('config.ini', encoding='utf-8')
+
+    # toggle streamlit on/off
+    # streamlit = config['DEFAULT']['streamlit']
+    config_values = {
+        # 'user': user,
+        'url': config.get(user,'url'),
+        'pass': config.get(user,'pass'),
+        'file': config.get(user,'file'),
+        'ext_url': config.get(user,'ext_url')
+        }
+    return config_values
+
+USERS = ["Criar Novo"] + read_users()
+
 
 st.header("Actual-Pluggy-Py")
-st.write("Brazilian bank sync for Actual powered by Pluggy - v28_09_2024.1")
+st.write("Brazilian bank sync for Actual powered by Pluggy - v06_10_2024.1")
 st.divider()
 
 # Criando as colunas
@@ -18,20 +39,52 @@ col1, col2 = st.columns([2, 1])
 # Coluna da esquerda
 with col1:
     # Campo para selecionar o usuário (instância do Actual)
-    selected_user = st.selectbox("Selecione o usuário:", list(actual_users.keys()))
+    # selected_user = st.selectbox("Selecione o usuário:", list(actual_users.keys()))
+    selected_user = st.selectbox("Selecione o usuário:", list(USERS))
     # Obter o valor selecionado a partir do dicionário e concatenar com a url base
-    URL_ACTUAL = url_base + actual_users[selected_user]
-    # Campo para o usuário preencher a senha
-    PASSWORD_ACTUAL = st.text_input("Senha do Actual:", type="password")
-    # Campo para o usuário informar o nome de um arquivo
-    FILE_ACTUAL = st.text_input("Nome do budget (file):")
+    # URL_ACTUAL = url_base + actual_users[selected_user]
+    if selected_user != "Criar Novo":
+        user_data = read_config(selected_user)
+        URL_ACTUAL = user_data['url']
+        print(URL_ACTUAL)
+        PASSWORD_ACTUAL = user_data['pass']
+        print(PASSWORD_ACTUAL)
+        FILE_ACTUAL = user_data['file']
+        print(FILE_ACTUAL)
+        EXT_URL = user_data['ext_url']
+        print(EXT_URL)
+        st.write(EXT_URL)
+
+# escrever o código para entrada manual das informações
+    else:
+        NEW_USER = st.text_input("Usuário:")
+        # Campo para o usuário preencher a senha
+        PASSWORD_ACTUAL = st.text_input("Senha do Actual:", type="password")
+        # Campo para o usuário informar o nome de um arquivo
+        FILE_ACTUAL = st.text_input("Nome do budget (file):")
+        URL_ACTUAL = st.text_input("URL do Actual (local):")
+        EXT_URL = st.text_input("URL externa do Actual:")
+        # Botão para executar a função pluggy_sync
+        if st.button("Cadastrar Usuário"):
+            # add a new section and some values
+            config = configparser.ConfigParser()
+            config.read('config.ini', encoding='utf-8')
+            config.add_section(NEW_USER)
+            config.set(NEW_USER, 'url', URL_ACTUAL)
+            config.set(NEW_USER, 'pass', PASSWORD_ACTUAL)
+            config.set(NEW_USER, 'file', FILE_ACTUAL)
+            config.set(NEW_USER, 'ext_url', EXT_URL)
+            # save to a file
+            with open('config.ini', 'w', encoding='utf-8') as configfile:
+                config.write(configfile)
+            USERS = [""] + read_users()
 
 # Coluna da direita
 with col2:
     # Definindo datas default
     end_date_default = datetime.today().replace(tzinfo=ZoneInfo('America/Sao_Paulo')).date()
     current_date = end_date_default.strftime("%Y%m%d")
-    start_date_default = end_date_default - timedelta(days=7)
+    start_date_default = end_date_default - timedelta(days=3)
 
     # Campos de data
     start_date = st.date_input("Data de Início", start_date_default, format="DD/MM/YYYY")
@@ -67,17 +120,17 @@ with col1:
             # Primeiro busca pluggy API key - em caso de falha, levanta erro
             apiKey = get_pluggy_api(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
 
-            output0.write("Realizando backup...")
-            backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
-            output0.write("Backup concluído.")
-            with open(f"./data/Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
-                btn = st.download_button(
-                    label="Download backup",
-                    data=file,
-                    file_name=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
-                    mime="file",
-                    help=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
-                )
+            # output0.write("Realizando backup...")
+            # backup_actual(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL)
+            # output0.write("Backup concluído.")
+            # with open(f"./data/Backup/{FILE_ACTUAL}-{current_date}.zip", "rb") as file:
+            #     btn = st.download_button(
+            #         label="Download backup",
+            #         data=file,
+            #         file_name=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
+            #         mime="file",
+            #         help=(f"{selected_user}-{FILE_ACTUAL}-{current_date}.zip"),
+            #     )
             
             output1.write("Iniciando sincronização...")
             output2 = st.empty()
