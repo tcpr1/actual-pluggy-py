@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
     software-properties-common \
+    cron \
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -21,8 +22,11 @@ RUN groupadd --gid $USER_GID $USERNAME \
 RUN mkdir -p /app/data/Backup && chown -R ${USERNAME}:${USERNAME} /app/data/Backup
 WORKDIR /app
 
+# Adiciona a configuração do Cron
+RUN echo "0 5 * * * python /app/pluggy_sync.py > /app/data/cron_log.txt" >> /etc/crontab
+
 EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

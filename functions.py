@@ -76,9 +76,9 @@ def getPluggy_transactions(apiKey, itemType, itemID, cardNumber, start_date, end
         url = "https://api.pluggy.ai/transactions?accountId=" + accountID + "&from=" + start_date + "&to=" + end_date
         response = requests.get(url, headers=headers)
         jTransactions = json.loads(response.text)
-        print("SUCCESS: Pluggy connected!")
+        # print("SUCCESS: Pluggy connected!")
     except:
-        print("FAILED Pluggy Connection!")
+        # print("FAILED Pluggy Connection!")
         return [], False
 
     nTransactions = jTransactions["total"]
@@ -219,7 +219,7 @@ def data_to_actual(csv_data, actual_session, account):
             already_matched=added_transactions,
         )
         actual_session.flush()  # flush to load the ids and relationships
-        print(t)
+        # print(t)
         ruleset.run(t)  # run the rule here
         added_transactions.append(t)
         
@@ -289,14 +289,14 @@ def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, 
         for account in accounts:
             accName = account.name
             if accName != "Pluggy":
-                print(f"\n{accName}: Verifying link with Pluggy.")
+                # print(f"\n{accName}: Verifying link with Pluggy.")
                 pluggyLink, itemType, itemID, cardNumber = getPluggy_acc_config(account.notes)
 
                 if pluggyLink > 1: 
                     print(f"More than one #pluggy data found for {accName} - Only 1 is expected.")
                     errFlag += 1
                 elif pluggyLink == 0: 
-                    print(f"Account not linked.")
+                    # print(f"Account not linked.")
                     errFlag += 1
 
                 elif pluggyLink == 1:
