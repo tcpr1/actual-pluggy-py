@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     software-properties-common \
     cron \
+    vim \
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -28,5 +29,9 @@ RUN echo "0 5 * * * python /app/pluggy_sync.py > /app/data/cron_log.txt" >> /etc
 EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+COPY crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab
+RUN touch /var/log/cron.log
+CMD cron && tail -f /var/log/cron.log
 
 ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
