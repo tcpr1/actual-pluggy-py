@@ -2,6 +2,15 @@ from functions import pluggy_sync, get_pluggy_api
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import configparser
+import logging
+import sys
+
+#logging
+log = logging.getLogger("SYNC")
+log.setLevel(logging.INFO)
+log.addHandler(logging.StreamHandler(sys.stdout)) # defaults to sys.stderr
+log.info(f"Executando pluggy_sync.py {datetime.today()}")
+
 
 # Funções para ler config.ini
 def read_default_config():
@@ -53,10 +62,12 @@ for USER in USERS:
         start_date = start_date_default.strftime('%Y-%m-%d')
         end_date = end_date_default.strftime('%Y-%m-%d')
 
-        print(f"Iniciando sincronização: {USER}")
+        # print(f"Iniciando sincronização: {USER}")
+        log.info(f"Iniciando sincronização: {USER}")
         tsync_start = datetime.today()
         pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, apiKey)
-        print(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}")
+        # print(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}")
+        log.info(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}")
 
     except ValueError:
         print("Falha: verifique credenciais Pluggy.")

@@ -3,11 +3,19 @@ from functions import pluggy_sync, backup_actual, get_pluggy_api
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import configparser
+import logging
+import sys
+
+#logging
+log = logging.getLogger("APP")
+log.setLevel(logging.INFO)
+log.addHandler(logging.StreamHandler(sys.stdout)) # defaults to sys.stderr
+log.info("Iniciado app.py")
 
 # Funções para ler config.ini
 def read_default_config():
     config = configparser.ConfigParser()
-    config.read('data/config.ini', encoding='utf-8')
+    config.read('./data/config.ini', encoding='utf-8')
     config_defaults = {
         'streamlit': config['DEFAULT']['streamlit'],
         'sync_interval': config['DEFAULT']['sync_interval']
@@ -16,13 +24,13 @@ def read_default_config():
 
 def read_users():
     config = configparser.ConfigParser()
-    config.read('data/config.ini', encoding='utf-8')
+    config.read('./data/config.ini', encoding='utf-8')
     users = config.sections()
     return users
 
 def read_user_config(user):
     config = configparser.ConfigParser()
-    config.read('data/config.ini', encoding='utf-8')
+    config.read('./data/config.ini', encoding='utf-8')
     config_values = {
         # 'user': user,
         'url': config.get(user,'url'),
@@ -138,6 +146,7 @@ if CONFIG['streamlit'] == 'True':
                 #     )
                 
                 output1.write("Iniciando sincronização...")
+                log.info("Iniciando sincronização...")
                 output2 = st.empty()
                 with st_capture(output2.code):    
                     delta = end_date - start_date
@@ -153,8 +162,10 @@ if CONFIG['streamlit'] == 'True':
                             print(f"\nExecutando sync entre datas: {step_start_date} e {step_end_date}")
                             pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, step_start_date, step_end_date, apiKey)
                     output1.write("Sincronização concluída.")
+                    log.info("Sincronização concluída.")
             except ValueError:
                 output0.write("Falha: verifique credenciais Pluggy.")
+                log.critical("Falha: verifique credenciais Pluggy.")
 else:
     st.header("Actual-Pluggy-Py")
     st.write("Brazilian bank sync for Actual powered by Pluggy - v06_10_2024.1")
