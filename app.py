@@ -40,7 +40,7 @@ USERS = ["Criar Novo"] + read_users()
 
 if CONFIG['streamlit'] == 'True':
     st.header("Actual-Pluggy-Py")
-    st.write("Brazilian bank sync for Actual powered by Pluggy - v06_10_2024.2")
+    st.write("Brazilian bank sync for Actual powered by Pluggy - v12_10_2024.1")
     st.divider()
 
     # Criando as colunas
