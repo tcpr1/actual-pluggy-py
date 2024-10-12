@@ -26,7 +26,6 @@ WORKDIR /app
 EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
-COPY crontab /etc/cron.d/crontab
 RUN chmod 0644 /etc/cron.d/crontab
 RUN touch /var/log/cron.log
 CMD cron && tail -f /var/log/cron.log

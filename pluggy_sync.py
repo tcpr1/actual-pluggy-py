@@ -6,7 +6,7 @@ import configparser
 # Funções para ler config.ini
 def read_default_config():
     config = configparser.ConfigParser()
-    config.read('data/config.ini', encoding='utf-8')
+    config.read('./data/config.ini', encoding='utf-8')
     config_defaults = {
         'streamlit': config['DEFAULT']['streamlit'],
         'sync_interval': config['DEFAULT']['sync_interval']
@@ -15,13 +15,13 @@ def read_default_config():
 
 def read_users():
     config = configparser.ConfigParser()
-    config.read('data/config.ini', encoding='utf-8')
+    config.read('./data/config.ini', encoding='utf-8')
     users = config.sections()
     return users
 
 def read_user_config(user):
     config = configparser.ConfigParser()
-    config.read('data/config.ini', encoding='utf-8')
+    config.read('./data/config.ini', encoding='utf-8')
     config_values = {
         # 'user': user,
         'url': config.get(user,'url'),
