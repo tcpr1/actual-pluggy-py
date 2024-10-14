@@ -82,7 +82,7 @@ def getPluggy_transactions(apiKey, itemType, itemID, cardNumber, start_date, end
         return [], False
 
     nTransactions = jTransactions["total"]
-    print(f"Total Transactions: {nTransactions} | Pages: {jTransactions['totalPages']}")
+    # print(f"Total Transactions: {nTransactions} | Pages: {jTransactions['totalPages']}")
 
     # | Date | Payee | Notes | Category | Amount | Cleared | Imported_ID
     # [["Date","Payee","Notes","Category","Payment/Deposit","Cleared", "imported_ID"]]
@@ -223,8 +223,8 @@ def data_to_actual(csv_data, actual_session, account):
         ruleset.run(t)  # run the rule here
         added_transactions.append(t)
         
-        if t.changed():
-            print(f"Added or modified {t}")
+        # if t.changed():
+            # print(f"Added or modified {t}")
 
 def getPluggy_acc_config(account_notes):
     """
@@ -239,7 +239,7 @@ def getPluggy_acc_config(account_notes):
         for line in accNotes:
             if line.startswith("#pluggy"):
                 pluggyLink += 1
-                print(f"Pluggy link configured!")
+                # print(f"Pluggy link configured!")
                 accNotes = line.split('"')[1]
                 # accNotes = line.strip("#pluggy").strip().split(",")
                 itemType = accNotes.split(",")[0].strip()
@@ -274,7 +274,7 @@ def pluggy_range_dates(session, account, range_days):
 
     start_date = start_date.strftime('%Y-%m-%d')
     end_date = end_date.strftime('%Y-%m-%d')
-    print(f"Fetching transactions from {start_date} to {end_date}.")
+    # print(f"Fetching transactions from {start_date} to {end_date}.")
     return start_date, end_date
 
 def pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, apiKey):

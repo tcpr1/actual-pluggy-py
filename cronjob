@@ -1,0 +1,3 @@
+# Rotina para sincronizar informações a cada 3h (no minutp 35)
+35 */3 * * * /usr/local/bin/python /app/pluggy_sync.py >> /app/data/cron.log 2>&1
+35 */3 * * * echo Cronjob acionado! >> /app/data/cron.log 2>&1

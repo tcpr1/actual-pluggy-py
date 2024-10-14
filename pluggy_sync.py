@@ -1,21 +1,27 @@
+#!/usr/local/bin/python
+
 from functions import pluggy_sync, get_pluggy_api
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 import configparser
-import logging
-import sys
+#import logging
+#import sys
+import os
 
+os.chdir("/app")
 #logging
-log = logging.getLogger("SYNC")
-log.setLevel(logging.INFO)
-log.addHandler(logging.StreamHandler(sys.stdout)) # defaults to sys.stderr
-log.info(f"Executando pluggy_sync.py {datetime.today()}")
+# log = logging.getLogger("SYNC")
+# log.setLevel(logging.INFO)
+# log.addHandler(logging.StreamHandler(sys.stdout)) # defaults to sys.stderr
+# log.info(f"Executando pluggy_sync.py {datetime.today()}")
 
+f = open("/app/data/log.txt", "a")
+f.write(f"Executando pluggy_sync.py {datetime.today()}\n")
 
 # Funções para ler config.ini
 def read_default_config():
     config = configparser.ConfigParser()
-    config.read('./data/config.ini', encoding='utf-8')
+    config.read('/app/data/config.ini', encoding='utf-8')
     config_defaults = {
         'streamlit': config['DEFAULT']['streamlit'],
         'sync_interval': config['DEFAULT']['sync_interval']
@@ -24,13 +30,13 @@ def read_default_config():
 
 def read_users():
     config = configparser.ConfigParser()
-    config.read('./data/config.ini', encoding='utf-8')
+    config.read('/app/data/config.ini', encoding='utf-8')
     users = config.sections()
     return users
 
 def read_user_config(user):
     config = configparser.ConfigParser()
-    config.read('./data/config.ini', encoding='utf-8')
+    config.read('/app/data/config.ini', encoding='utf-8')
     config_values = {
         # 'user': user,
         'url': config.get(user,'url'),
@@ -63,13 +69,16 @@ for USER in USERS:
         end_date = end_date_default.strftime('%Y-%m-%d')
 
         # print(f"Iniciando sincronização: {USER}")
-        log.info(f"Iniciando sincronização: {USER}")
+        # log.info(f"Iniciando sincronização: {USER}")
+        f.write(f"Iniciando sincronização: {USER}\n")
+        
         tsync_start = datetime.today()
         pluggy_sync(URL_ACTUAL, PASSWORD_ACTUAL, FILE_ACTUAL, start_date, end_date, apiKey)
         # print(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}")
-        log.info(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}")
+        # log.info(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}")
+        f.write(f"Sincronização concluída. | Duração: {datetime.today()-tsync_start}\n")
 
     except ValueError:
         print("Falha: verifique credenciais Pluggy.")
         
-        
+f.close()

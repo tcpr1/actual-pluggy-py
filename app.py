@@ -10,7 +10,7 @@ import sys
 log = logging.getLogger("APP")
 log.setLevel(logging.INFO)
 log.addHandler(logging.StreamHandler(sys.stdout)) # defaults to sys.stderr
-log.info("Iniciado app.py")
+# log.info("Iniciado app.py")
 
 # Funções para ler config.ini
 def read_default_config():
