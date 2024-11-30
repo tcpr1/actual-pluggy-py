@@ -68,7 +68,7 @@ for USER in USERS:
         start_date = start_date_default.strftime('%Y-%m-%d')
         end_date = end_date_default.strftime('%Y-%m-%d')
 
-        # print(f"Iniciando sincronização: {USER}")
+        print(f"Iniciando sincronização: {USER}")
         # log.info(f"Iniciando sincronização: {USER}")
         f.write(f"Iniciando sincronização: {USER}\n")
         
@@ -80,5 +80,6 @@ for USER in USERS:
 
     except ValueError:
         print("Falha: verifique credenciais Pluggy.")
+        f.write(f"Falha: verifique credenciais Pluggy.")
         
 f.close()

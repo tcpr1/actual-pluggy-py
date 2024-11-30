@@ -224,7 +224,7 @@ def data_to_actual(csv_data, actual_session, account):
         added_transactions.append(t)
         
         # if t.changed():
-            # print(f"Added or modified {t}")
+        #     print(f"Added or modified {t}")
 
 def getPluggy_acc_config(account_notes):
     """
